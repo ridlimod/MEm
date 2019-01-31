@@ -22,10 +22,37 @@ def setDrawStyle(jnt, drawStyle=jntDrawStyle["Bone"]):
 
 def renameChain(jnt, namepattern, indxs, step=1):
     for jnt in pym.ls(jnt, dag=True, type="joint"):
-        newname = namepattern.format(**indxs)
-        pym.rename(jnt, newname)
+        rename(jnt, namepattern, indxs)
         for key in indxs:
             indxs[key] += step
+
+
+def rename(jnt, namepattern, indxs):
+    print namepattern, indxs
+    newname = namepattern.format(**indxs)
+    print newname
+    pym.rename(jnt, newname)
+
+
+def renameFromTo(start, end, namepattern, indxs, step=1):
+    for jnt in fromTo(start, end):
+        rename(jnt, namepattern, indxs)
+        for key in indxs:
+            indxs[key] += step
+
+
+def fromTo(start, end):
+    if start == end:
+        return [start]
+    else:
+        for child in start.getChildren(type="transform"):
+            sublist = fromTo(child, end)
+            if sublist:
+                sublist.insert(0, start)
+                return sublist[:]
+            else:
+                return sublist[:]
+    return []
 
 
 def createFKControlChain(start, end=None, p="world"):
@@ -42,9 +69,10 @@ def createFKControlChain(start, end=None, p="world"):
 
     ctl = pym.createNode("transform", n=ctlname, p=node)
 
-    if end is None or start != end:
+    if start != end:
         for child in start.getChildren(type="transform"):
-            createFKControlChain(child, end, p=ctl.name())
+            if end is None or child in fromTo(start, end):
+                createFKControlChain(child, end, p=ctl.name())
 
 
 def getJnt(ctl):
@@ -95,6 +123,11 @@ def replaceCtlRefShape(ref, ctl):
 
 def uninstanceCtlShape(ctl):
     i = 1
+    childlist = []
+    for child in ctl.getChildren(type="transform"):
+        childlist.append(child)
+        print child.name()
+        pym.parent(child, a=True, w=True)
     for shape in ctl.listRelatives(shapes=True):
         id, x, side, func = ctl.name().split("_", 3)
         shapename = "_".join(
@@ -105,9 +138,12 @@ def uninstanceCtlShape(ctl):
                 func,
                 "shp"]
         )
-        shape.duplicate(name=shapename, addShape=True)[0]
+        shape.duplicate(name=shapename, addShape=True)
         pym.parent(shape, rm=True, s=True)
         i += 1
+    for child in childlist:
+        print child.name(), ctl.name()
+        pym.parent(child, ctl, a=True)
 
 
 def createCtlAt(ref, tm):
@@ -119,10 +155,10 @@ def createCtlAt(ref, tm):
 
 def ctlColor(color):
     dColor = {
-        blue: 6,
-        red: 13,
-        green: 14,
-        yellow: 17
+        "blue": 6,
+        "red": 13,
+        "green": 14,
+        "yellow": 17
     }
 
     if color not in dColor:
