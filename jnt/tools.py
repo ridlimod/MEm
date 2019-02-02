@@ -172,3 +172,48 @@ def ctlColor(color):
             shape.overrideEnabled.set(0)
         s.overrideEnabled.set(1)
         s.overrideColor.set(icolor)
+
+
+def goMirror(ctr, p=None):
+    """
+    Mirror Control Tree.
+    param ctr: control tree root of the control tree to mirror up
+    """
+    name = ctr.name()
+    if "_l_" in name:
+        mirrorname = name.replace("_l_", "_r_")
+    elif "_L_" in name:
+        mirrorname = name.replace("_L_", "_R_")
+    elif "_r_" in name:
+        mirrorname = name.replace("_r_", "_l_")
+    elif "_R_" in name:
+        mirrorname = name.replace("_R_", "_L_")
+    else:
+        raise(Exception("node not mirroreable"))
+    try:
+        mirrorNode = pym.PyNode(mirrorname)
+    except pym.MayaNodeError:
+        mirrorNode = pym.createNode("transform", n=mirrorname)
+
+    pym.parent(mirrorNode, ctr)
+    pym.xform(
+        mirrorNode, absolute=True,
+        translation=[0, 0, 0], rotation=[0, 0, 0], scale=[1, 1, 1]
+    )
+    mirrorTmp = pym.createNode("transform", n="__tmp_")
+    pym.parent(mirrorNode, mirrorTmp, a=True)
+    pym.xform(mirrorTmp, absolute=True, scale=[-1, 1, 1])
+    pym.parent(mirrorNode, w=True, a=True)
+    pym.delete(mirrorTmp)
+    pym.makeIdentity(
+        mirrorNode, apply=True, translate=False, rotate=False, scale=True
+    )
+    if p is None:
+        pym.parent(mirrorNode, ctr.getParent(), a=True)
+    else:
+        pym.parent(mirrorNode, p, a=True)
+
+    if mirrorNode.name().endswith("_control"):
+        replaceCtlRefShape(ctr, mirrorNode)
+    for child in ctr.getChildren(type="transform"):
+        goMirror(child, p=mirrorNode)
