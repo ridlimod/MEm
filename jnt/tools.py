@@ -217,3 +217,16 @@ def goMirror(ctr, p=None):
         replaceCtlRefShape(ctr, mirrorNode)
     for child in ctr.getChildren(type="transform"):
         goMirror(child, p=mirrorNode)
+
+
+def alignChain(sJnt):
+    refJntName = sJnt.name().rsplit("_",1)[0] + "_def"
+    refJnt = pym.PyNode(refJntName)
+    pym.parentConstraint(refJnt, sJnt)
+    pym.parentConstraint(refJnt, sJnt, rm=True)
+    for child in sJnt.getChildren(type="joint"):
+        alignChain(child)
+
+
+if __name__ == "__main__":
+    alignChain(pym.PyNode("spine_01_c_iks"))
