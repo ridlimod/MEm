@@ -147,9 +147,16 @@ def uninstanceCtlShape(ctl):
 
 
 def createCtlAt(ref, tm):
-    offgrp = pym.createNode("transform", n="new_offgrp", p=tm)
+    tmName = tm.name()
+    if "_" in tmName:
+        offName = "_".join(tmName.split("_")[:-1]) + "_offgrp"
+        ctlName = "_".join(tmName.split("_")[:-1]) + "_control"
+    else:
+        offName = "new_offgrp"
+        ctlName = "new_control"
+    offgrp = pym.createNode("transform", n=offName, p=tm)
     pym.parent(offgrp, a=True, w=True)
-    ctl = pym.createNode("transform", n="new_control", p=offgrp)
+    ctl = pym.createNode("transform", n=ctlName, p=offgrp)
     addCtlRefShape(ref, ctl)
 
 
