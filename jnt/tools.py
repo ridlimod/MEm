@@ -1,4 +1,5 @@
 import pymel.core as pym
+from MEm.xform.obj import copyTM
 
 
 jntDrawStyle = {
@@ -55,24 +56,37 @@ def fromTo(start, end):
     return []
 
 
-def createFKControlChain(start, end=None, p="world"):
+def createFKControlChain(
+    start, end=None, p="world",
+    control="control", ctltype="transform"
+):
     head = "_".join(start.name().split("_")[:-1])
     name = "{0}_{1}".format(head, "offgrp")
-    ctlname = "{0}_fk_control".format(head)
+    ctlname = "{0}_fk_{1}".format(head, control)
     node = pym.createNode("transform", n=name)
-    pym.parent(node, start, r=True)
+    # pym.parent(node, start, r=True)
+    copyTM(start, node)
 
     if p == "world":
         pym.parent(node, w=True, a=True)
     else:
         pym.parent(node, p, a=True)
 
-    ctl = pym.createNode("transform", n=ctlname, p=node)
+    if ctltype == "transform":
+        ctl = pym.createNode(ctltype, n=ctlname, p=node)
+    else:
+        ctl = pym.createNode(ctltype, n=ctlname + "_shape")
+        ctltm = ctl.getParent()
+        ctltm.rename(ctlname)
+        pym.parent(ctltm, node, r=True)
 
     if start != end:
         for child in start.getChildren(type="transform"):
             if end is None or child in fromTo(start, end):
-                createFKControlChain(child, end, p=ctl.name())
+                createFKControlChain(
+                    child, end, p=ctl.name(),
+                    control=control, ctltype=ctltype
+                )
 
 
 def getJnt(ctl):
