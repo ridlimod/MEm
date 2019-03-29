@@ -143,18 +143,11 @@ def uninstanceCtlShape(ctl):
         print child.name()
         pym.parent(child, a=True, w=True)
     for shape in ctl.listRelatives(shapes=True):
-        id, x, side, func = ctl.name().split("_", 3)
-        shapename = "_".join(
-            [
-                id,
-                "{0}{1:0>2}".format(x, i),
-                side,
-                func,
-                "shp"]
-        )
+        shapeori = ctl.name()
+        shapename = shapeori + "_shp"
         shape.duplicate(name=shapename, addShape=True)
         pym.parent(shape, rm=True, s=True)
-        i += 1
+
     for child in childlist:
         print child.name(), ctl.name()
         pym.parent(child, ctl, a=True)
