@@ -92,7 +92,10 @@ def createFKControlChain(
 def getJnt(ctl):
     if ctl.type() != "transform":
         ctl = ctl.getParent()
-    jntname = "_".join(ctl.name().split("_")[0:3])+"_def"
+    print "DEBUG:", ctl.name()
+    nameParts = ctl.name().split("_")
+    print nameParts
+    jntname = "_".join(nameParts[0:3] + ["def"])
     try:
         jnt = pym.PyNode(jntname)
     except pym.MayaNodeError as e:
@@ -136,7 +139,6 @@ def replaceCtlRefShape(ref, ctl):
 
 
 def uninstanceCtlShape(ctl):
-    i = 1
     childlist = []
     for child in ctl.getChildren(type="transform"):
         childlist.append(child)
@@ -180,7 +182,10 @@ def ctlColor(color):
     else:
         icolor = dColor[color]
 
-    sel = (obj for obj in pym.ls(selection=True, dag=True) if obj.name().endswith("_control"))
+    sel = (
+        obj for obj in pym.ls(selection=True, dag=True)
+        if obj.name().endswith("_control")
+    )
     for s in sel:
         for shape in s.listRelatives(shapes=True):
             shape.overrideEnabled.set(0)
@@ -234,7 +239,7 @@ def goMirror(ctr, p=None):
 
 
 def alignChain(sJnt):
-    refJntName = sJnt.name().rsplit("_",1)[0] + "_def"
+    refJntName = sJnt.name().rsplit("_", 1)[0] + "_def"
     refJnt = pym.PyNode(refJntName)
     pym.parentConstraint(refJnt, sJnt)
     pym.parentConstraint(refJnt, sJnt, rm=True)
