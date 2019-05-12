@@ -247,5 +247,57 @@ def alignChain(sJnt):
         alignChain(child)
 
 
+def mirrorJoints(sJnt, side=""):
+    sJnt = pym.PyNode(sJnt)
+    if side == "":
+        if "_r_" in sJnt.name():
+            mirrorJoints(sJnt, side="l")
+            return
+        if "_l_" in sJnt.name():
+            mirrorJoints(sJnt, side="r")
+            return
+
+    if side == "r":
+        src = "_l_"
+        tgt = "_r_"
+        aux = "_rr_"
+    if side == "l":
+        src = "_r_"
+        tgt = "_l_"
+        aux = "_ll_"
+
+    print src, tgt, aux
+    mGrp = pym.createNode("transform", n="mirror_grp")
+    name = sJnt.name()
+    auxname = name.replace(src, aux)
+    nJnt = pym.duplicate(sJnt, n=auxname)[0]
+    for cJnt in nJnt.listRelatives(ad=True):
+        cName = cJnt.name()
+        cAuxName = cName.replace(src, aux)
+        cJnt.rename(cAuxName)
+
+    pym.parent(nJnt, mGrp, a=True)
+    mGrp.scaleX.set(-1)
+
+    def recurse(root, p=None):
+        nf = root.name()
+        newname = nf.replace(aux, tgt)
+        newJnt = pym.createNode("joint", n=newname)
+        copyTM(root, newJnt)
+        newJnt.radius.set(root.radius.get())
+        pym.makeIdentity(
+            newJnt, apply=True, translate=True, rotate=True, scale=True
+        )
+
+        if p:
+            pym.parent(newJnt, p)
+
+        for child in root.getChildren(type="joint"):
+            recurse(child, p=newJnt)
+
+    recurse(nJnt)
+    pym.delete(mGrp)
+
+
 if __name__ == "__main__":
     alignChain(pym.PyNode("spine_01_c_iks"))
