@@ -275,9 +275,10 @@ def selectBest(lskey, lBsn):
         if i > cmax[1]:
             cmax = (bsn, i, j)
         j += 1
-    if j != -1:
-        lBsn = lBsn[:j-1] + lBsn[j+1:]
-    return bsn, lBsn
+    testj = cmax[2]
+    if testj != -1:
+        lBsn = lBsn[:testj] + lBsn[testj+1:]
+    return cmax[0], lBsn
 
 
 def matchBSN():
@@ -308,8 +309,11 @@ def matchBSN():
 
 
 if __name__ == "__main__":
-    for e in iterConns("connsGaby"):
-        print e
+    pass
+    # import MEm.shapes.shapes as shp; reload(shp)
+    # shp.matchBSN()
+    # for e in iterConns("connsGaby"):
+    #     print e
     # test()
     # oEYE_S = Shapes("EYELID_DOWN_L")
     # oEYE_S.mirrorShapes("EYELID_DOWN_R")

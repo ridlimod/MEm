@@ -300,4 +300,5 @@ def mirrorJoints(sJnt, side=""):
 
 
 if __name__ == "__main__":
-    alignChain(pym.PyNode("spine_01_c_iks"))
+    # alignChain(pym.PyNode("spine_01_c_iks"))
+    renameChain("joint1", "feater01_{i:0:0>2}_c_def", {"i": 1})
