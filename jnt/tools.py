@@ -299,6 +299,19 @@ def mirrorJoints(sJnt, side=""):
     pym.delete(mGrp)
 
 
+def inverseChain(root, parent=None):
+    print root, parent
+    root = pym.PyNode(root)
+    children = root.getChildren()
+    for child in children:
+        print "unparent:", child
+        pym.parent(child, w=True)
+        inverseChain(child, parent=root)
+    if parent:
+        print "parent:", parent, root
+        pym.parent(parent, root, a=True)
+
+
 if __name__ == "__main__":
     # alignChain(pym.PyNode("spine_01_c_iks"))
     renameChain("joint1", "feater01_{i:0:0>2}_c_def", {"i": 1})
