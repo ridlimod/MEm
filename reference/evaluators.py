@@ -1,5 +1,6 @@
 import pymel.core as pym
 from maya import mel
+from strops import deenvelop, reenvelop
 
 
 def force(ed):
@@ -16,17 +17,6 @@ def edeval(ed):
     return True
 
 
-def unquote(attr):
-    quoted = False
-    if attr.startswith("\""):
-        quoted = True
-    return attr.strip("\""), quoted
-
-
-def quote(attr):
-    return "\"" + attr + "\""
-
-
 def attrExists(attr):
     try:
         pym.PyNode(attr)
@@ -37,7 +27,7 @@ def attrExists(attr):
 
 
 def findAttr(attr, lNS):
-    attr, quoted = unquote(attr)
+    attr, envelop = deenvelop(attr)
     found = False
     if attrExists(attr):
         found = True
@@ -51,8 +41,8 @@ def findAttr(attr, lNS):
 
     if found:
         oAttr = pym.PyNode(attr)
-        if quoted:
-            attr = quote(attr)
+        if any(envelop):
+            attr = reenvelop(attr, envelop)
         return oAttr, attr
     else:
         return None, None
@@ -68,6 +58,21 @@ def evalSetAttr(ed, lNS, replaceList):
         print "Attr:", attr, "from:", edp, "not found"
         return False
     edp[1] = attr
+    if edeval(" ".join(edp)):
+        return True
+    return False
+
+
+def evalAddAttr(ed, lNS, replaceList):
+    edp = ed[:]
+    attr = edp[-1]
+    for istr, irep in replaceList:
+        attr = attr.replace(istr, irep)
+    oAttr, attr = findAttr(attr, lNS)
+    if attr is None:
+        print "Attr:", attr, "from:", edp, "not found"
+        return False
+    edp[-1] = attr
     if edeval(" ".join(edp)):
         return True
     return False
@@ -100,13 +105,17 @@ def evalConnectAttr(ed, lNS, replaceList):
             print "Attr:", attr1, "from:", edp, "not found"
             return False
 
-        if oAttr2.isLocked():
+        if edp[0].startswith("connect") and oAttr2.isLocked():
             print "Skip Locked:", ed
             return True
 
         edp[1] = attr1
         edp[2] = attr2
 
-        if edeval(" ".join(force(edp))):
-            return True
+        if edp[0].startswith("connect"):
+            if edeval(" ".join(force(edp))):
+                return True
+        else:
+            if edeval(" ".join(edp)):
+                return True
     return False

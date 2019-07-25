@@ -100,13 +100,21 @@ def importEDS(refnode, file, replacelist, searchNS=None):
     while edlist:
         ed = edlist[0]
         cmd = ed[0]
-        if cmd == "setAttr":
+        if cmd in ("setAttr",):
+            print "DEBUG:", "setAttr"
             if eva.evalSetAttr(ed, [tgtNS] + searchNS, replacelist):
                 edlist.pop(0)
             else:
                 print "ERROR: setAttr"
                 return edlist
-        elif cmd == "connectAttr":
+        elif cmd in ("addAttr",):
+            print "DEBUG:", "addAttr"
+            if eva.evalAddAttr(ed, [tgtNS] + searchNS, replacelist):
+                edlist.pop(0)
+            else:
+                print "ERROR: addAttr"
+                return edlist
+        elif cmd in ("connectAttr", "disconnectAttr"):
             if eva.evalConnectAttr(ed, [tgtNS] + searchNS, replacelist):
                 edlist.pop(0)
             else:

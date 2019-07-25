@@ -48,6 +48,20 @@ def fixGabyBird():
     return fix(srcRN, tgtRN, json_file, json_file_left, rplist)
 
 
+def fixZachiel():
+    srcRN = "zachiel_v56_namespaceRN"
+    tgtRN = "zachiel_01RN"
+    json_file, json_file_left = (
+        "zachiel_eds.json", "zachiel_eds_left.json"
+    )
+
+    rplist = (
+        ("zachiel:", "zachiel_01:zachiel:"),
+    )
+
+    return fix(srcRN, tgtRN, json_file, json_file_left, rplist)
+
+
 def fix(srcRN, tgtRN, json_file, json_file_left, rplist):
     ref.exportEDS(srcRN, json_file)
     if not os.path.exists(json_file_left):
