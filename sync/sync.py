@@ -112,12 +112,24 @@ def syncTextures(error=False):
     oSync = Sync()
     for fn in pym.ls(type="file"):
         ftn = fn.fileTextureName.get()
-        if not oSync.local_exists(ftn):
+        try:
+            exists = oSync.local_exists(ftn)
+        except Exception as e:
+            if error:
+                print "Raise:", e
+                raise e
+            else:
+                print "Error:", e
+                print "Skip"
+                continue
+
+        if not exists:
             print "Copying...", ftn
             try:
                 sftn = oSync.copyRef(ftn)
             except Exception as e:
                 if error:
+                    print "Raise:", e
                     raise e
                 else:
                     print "Error:", e
