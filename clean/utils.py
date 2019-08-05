@@ -1,4 +1,5 @@
 import pymel.core as pym
+import maya.cmds as mc
 
 
 def removeOnModelEditChange():
@@ -20,6 +21,31 @@ def removeUnknownPlugings():
         pym.unknownPlugin(plug, remove=True)
 
 
+def removeEmptySets():
+    oseIt = [
+        ose.name(long=True) for ose in pym.ls(type="objectSet")
+        if not ose.members()
+        and ose.type() != "MASH_Waiter"
+    ]
+    for ose in oseIt:
+        print "DEB: Try deleting:", ose
+        try:
+            mc.delete(ose)
+        except Exception as e:
+            print "Not deletable", e
+
+
+def removeLegacyLayers():
+    for layer in (
+        layer for layer in pym.ls(type="renderLayer")
+        if not layer.name().startswith("rs")
+    ):
+        try:
+            pym.delete(layer)
+        except Exception as e:
+            print layer, "can't be delete"
+
+
 def removeAll():
     print("remove UI Event")
     removeOnModelEditChange()
@@ -27,3 +53,8 @@ def removeAll():
     removeUnknownNodes()
     print("remove Unknown Plugins")
     removeUnknownPlugings()
+    print("remove Empty Sets")
+    removeEmptySets()
+    print("remove legacy layers")
+    removeLegacyLayers()
+    print("FINISHED")

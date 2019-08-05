@@ -14,6 +14,12 @@ def referenceMultiple(file, namespace, start, quantity):
         frO.unload()
 
 
+def fixRootNodes(srcRef, tgtRef):
+    tgtNameSpace = pym.referenceQuery(tgtRef, namespace)
+    eds = pym.referenceQuery(srcRef, eds)
+    ### WIP """
+
+
 def fixEditsSubstring(refnode, pfix, namespace):
     # pfix = "conservaEnch_v01_proxy_"
     pl = len(pfix)
@@ -88,7 +94,7 @@ def exportEDS(refnode, file):
         json.dump(edlist, fh, indent=4)
 
 
-def importEDS(refnode, file, replacelist, searchNS=None):
+def importEDS(refnode, file, replacelist, searchNS=None, skip=False):
     if searchNS is None:
         searchNS = []
 
@@ -101,24 +107,31 @@ def importEDS(refnode, file, replacelist, searchNS=None):
         ed = edlist[0]
         cmd = ed[0]
         if cmd in ("setAttr",):
-            print "DEBUG:", "setAttr"
-            if eva.evalSetAttr(ed, [tgtNS] + searchNS, replacelist):
+            if eva.evalSetAttr(ed, [tgtNS] + searchNS, replacelist) or skip:
                 edlist.pop(0)
             else:
                 print "ERROR: setAttr"
                 return edlist
         elif cmd in ("addAttr",):
-            print "DEBUG:", "addAttr"
-            if eva.evalAddAttr(ed, [tgtNS] + searchNS, replacelist):
+            if eva.evalAddAttr(ed, [tgtNS] + searchNS, replacelist) or skip:
                 edlist.pop(0)
             else:
                 print "ERROR: addAttr"
                 return edlist
         elif cmd in ("connectAttr", "disconnectAttr"):
-            if eva.evalConnectAttr(ed, [tgtNS] + searchNS, replacelist):
+            if (
+                eva.evalConnectAttr(ed, [tgtNS] + searchNS, replacelist)
+                or skip
+            ):
                 edlist.pop(0)
             else:
                 print "ERROR: connectAttr"
+                return edlist
+        elif cmd in ("parent",):
+            if eva.evalParent(ed, [tgtNS] + searchNS, replacelist) or skip:
+                edlist.pop(0)
+            else:
+                print "ERROR: parent"
                 return edlist
         else:
             edlist.pop(0)

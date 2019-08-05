@@ -1,6 +1,7 @@
 import reference as ref
 import json
 import os
+import pymel.core as pym
 reload(ref)
 
 
@@ -17,21 +18,69 @@ def fixLilli():
     return fix(srcRN, tgtRN, json_file, json_file_left, rplist)
 
 
-def fixSinistra():
+def sinistraToClon(s=1, c=1, n=1, skip=True):
+    sinistra = "sinistra"
+    clon = "clonSinistra"
+    for idx in range(0, n):
+        inxs = s + idx
+        inxc = c + idx
+        sinistraRN = "{0}_{1:0>2}RN".format(sinistra, inxs)
+        clonRN = "{0}_{1:0>2}RN".format(clon, inxc)
+        print "DEBUG:", sinistraRN, clonRN
+        sinistraNS = sinistraRN[:-2]
+        clonNS = clonRN[:-2]
+        try:
+            os.remove("{0}_eds.json".format(sinistra))
+        except Exception:
+            print "already deleted"
+
+        try:
+            os.remove("{0}_eds_left.json".format(sinistra))
+        except Exception:
+            print "already deleted"
+
+        rplist = (
+            (
+                "{0}:{1}:".format(sinistraNS, sinistra),
+                "{0}:{1}:".format(clonNS, clon)
+            ),
+            (
+                "|{0}fosterParent1|".format(sinistraRN),
+                ""
+            ),
+            (
+                "{0}:{1}:{2}".format(clonNS, clon, sinistra),
+                "{0}:{1}:{2}".format(clonNS, clon, clon)
+            )
+        )
+        for srch, repl in rplist:
+            print "replace:", srch, "with:", repl
+
+        print sinistraRN, clonRN
+        print "fixSinistra({0}, {1}, irplist={2}, skip={3})".format(
+            sinistraRN, clonRN, rplist, skip
+        )
+        fixSinistra(sinistraRN, clonRN, rplist, skip=skip)
+    return None
+
+
+def fixSinistra(
+    srcRN="sinistra_v60_namespaceRN", tgtRN="sinistra_01RN",
+    irplist=None, skip=False
+):
     # ### sinistra
-    srcRN = "sinistra_v60_namespaceRN"
-    tgtRN = "sinistra_01RN"
+    tgtNS = pym.referenceQuery(tgtRN, namespace=True)
     json_file, json_file_left = (
         "sinistra_eds.json", "sinistra_eds_left.json"
     )
 
-    rplist = (
-        ("sinistra:", "sinistra_01:sinistra:"),
-        ("sinistra2:", "sinistra_01:sinistra:"),
-        ("sinistra1:", "sinistra_01:sinistra:")
+    rplist = irplist or (
+        ("sinistra:", "{0}:sinistra:".format(tgtNS)),
+        ("sinistra2:", "{0}:sinistra:".format(tgtNS)),
+        ("sinistra1:", "{0}:sinistra:".format(tgtNS))
     )
 
-    return fix(srcRN, tgtRN, json_file, json_file_left, rplist)
+    return fix(srcRN, tgtRN, json_file, json_file_left, rplist, skip=skip)
 
 
 def fixGabyBird():
@@ -48,26 +97,40 @@ def fixGabyBird():
     return fix(srcRN, tgtRN, json_file, json_file_left, rplist)
 
 
-def fixZachiel():
-    srcRN = "zachiel_v56_namespaceRN"
-    tgtRN = "zachiel_01RN"
+def fixZachiel(
+    srcRN="zachiel_v56_namespaceRN", tgtRN="zachiel_01RN",
+    irplist=None
+):
     json_file, json_file_left = (
         "zachiel_eds.json", "zachiel_eds_left.json"
     )
-
-    rplist = (
-        ("zachiel:", "zachiel_01:zachiel:"),
+    tgtNS = pym.referenceQuery(tgtRN, namespace=True)
+    rplist = irplist or (
+        ("zachiel:", "{0}:zachiel:".format(tgtNS)),
+        ("zachiel1:", "{0}:zachiel:".format(tgtNS)),
     )
 
     return fix(srcRN, tgtRN, json_file, json_file_left, rplist)
 
 
-def fix(srcRN, tgtRN, json_file, json_file_left, rplist):
+def fixHairbrush(
+    srcRN="hairBrush_v03RN", tgtRN="hairbrush_01RN",
+    irplist=None
+):
+    json_file, json_file_left = (
+        "hairbrush_eds.json", "hairbrush_eds_left.json"
+    )
+    rplist = irplist or []
+
+    return fix(srcRN, tgtRN, json_file, json_file_left, rplist)
+
+
+def fix(srcRN, tgtRN, json_file, json_file_left, rplist, skip=False):
     ref.exportEDS(srcRN, json_file)
     if not os.path.exists(json_file_left):
         ref.exportEDS(srcRN, json_file_left)
 
-    edleft = ref.importEDS(tgtRN, json_file_left, rplist)
+    edleft = ref.importEDS(tgtRN, json_file_left, rplist, skip=skip)
     if edleft:
         with open(json_file_left, "w") as fh:
             json.dump(edleft, fh, indent=4)

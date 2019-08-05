@@ -12,7 +12,6 @@ def edeval(ed):
         mel.eval(ed)
     except Exception as e:
         print "Error:", e
-        print "DEBUG:", "is locked:", "is locked" in e
         return False
     return True
 
@@ -33,10 +32,18 @@ def findAttr(attr, lNS):
         found = True
     else:
         for ns in lNS:
-            lAttr = pym.ls(ns + "::" + attr.split("|")[-1].split(":")[-1])
+            attrLastHierachy = attr.split("|")[-1]
+            attrStripNamespace = attrLastHierachy.split(":")[-1]
+            searchWildCard = ns + "::" + attrStripNamespace
+            lAttr = pym.ls(searchWildCard)
             if len(lAttr) == 1:
                 found = True
-                attr = lAttr[0].name(fullDagPath=True, fullAttrPath=True)
+                if type(lAttr[0]) == pym.Attribute:
+                    attr = lAttr[0].name(fullDagPath=True, fullAttrPath=True)
+                elif type(lAttr[0]) == pym.general.Pivot:
+                    attr = lAttr[0].name()
+                else:
+                    attr = lAttr[0].name(long=True)
                 break
 
     if found:
@@ -78,7 +85,31 @@ def evalAddAttr(ed, lNS, replaceList):
     return False
 
 
+def evalParent(ed, lNS, replaceList):
+    edp = ed[:]
+    attr1 = edp[-2]
+    attr2 = edp[-1]
+    for istr, irep in replaceList:
+        attr1 = attr1.replace(istr, irep)
+        attr2 = attr2.replace(istr, irep)
+
+    oAttr1, fattr1 = findAttr(attr1, lNS)
+    if fattr1 is None:
+        print "Attr1:", attr1, "from:", edp, "not found"
+        return False
+    oAttr2, fattr2 = findAttr(attr2, lNS)
+    if attr2 is None:
+        print "Attr2:", attr2, "from:", edp, "not found"
+        return False
+    edp[-2] = fattr1
+    edp[-1] = fattr2
+    if edeval(" ".join(edp)):
+        return True
+    return False
+
+
 def evalConnectAttr(ed, lNS, replaceList):
+    # print "DEBUG:", "ed:", ed
     skip = False
     edp = ed[:]
     attr1 = edp[1]
@@ -87,6 +118,7 @@ def evalConnectAttr(ed, lNS, replaceList):
         attr1 = attr1.replace(istr, irep)
         attr2 = attr2.replace(istr, irep)
 
+    # print "DEBUG:", "attr1:", attr1, "attr2:", attr2
     for attr in (attr1, attr2):
         if "MayaNodeEditorSavedTabsInfo" in attr:
             skip = True
@@ -96,26 +128,27 @@ def evalConnectAttr(ed, lNS, replaceList):
         print "Skip:", ed
         return True
     else:
-        oAttr1, attr1 = findAttr(attr1, lNS)
-        if attr1 is None:
-            print "Attr:", attr1, "from:", edp, "not found"
+        oAttr1, fattr1 = findAttr(attr1, lNS)
+        if fattr1 is None:
+            print "Attr1:", attr1, "from:", edp, "not found"
             return False
-        oAttr2, attr2 = findAttr(attr2, lNS)
+        oAttr2, fattr2 = findAttr(attr2, lNS)
         if attr2 is None:
-            print "Attr:", attr1, "from:", edp, "not found"
+            print "Attr2:", attr2, "from:", edp, "not found"
             return False
 
         if edp[0].startswith("connect") and oAttr2.isLocked():
             print "Skip Locked:", ed
             return True
 
-        edp[1] = attr1
-        edp[2] = attr2
-
+        edp[1] = fattr1
+        edp[2] = fattr2
         if edp[0].startswith("connect"):
+            # print "DEBUG:", "eval:", " ".join(force(edp))
             if edeval(" ".join(force(edp))):
                 return True
         else:
+            # print "DEBUG:", "eval:", " ".join(edp)
             if edeval(" ".join(edp)):
                 return True
     return False
