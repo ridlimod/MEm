@@ -1,6 +1,7 @@
 import subprocess as subp
 import os
 
+__DEBUG__ = False
 
 OIIO_BINS = os.path.normpath(
     "E:/MayaDev/MEm/textures/staticBins/oiio-1.5.0/bin"
@@ -24,9 +25,7 @@ def shuffle(input, output=None, channels=DEFAULTCHANNELS):
     cmd.extend(["-ch", ",".join(channels)])
     cmd.extend(["-o", output or input])
 
-    print " ".join(cmd)
-    rc = subp.call(cmd, shell=False, stderr=subp.PIPE)
-    print rc
+    return rccall(cmd)
 
 
 def info(input):
@@ -35,6 +34,22 @@ def info(input):
 
     rc = subp.check_output(cmd, shell=False, stderr=subp.PIPE)
     return rc
+
+
+def compare(A, B):
+    cmd = [oiio["oiiotool"]]
+    cmd.append(A)
+    cmd.append(B)
+    cmd.append("--diff")
+
+    return rccall(cmd)
+
+
+def rccall(cmd):
+    if __DEBUG__:
+        print " ".join(cmd)
+    rc = subp.call(cmd, shell=False, stderr=subp.PIPE, stdout=subp.PIPE)
+    return rc == 0
 
 
 if __name__ == "__main__":

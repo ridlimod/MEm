@@ -42,8 +42,25 @@ def multFNdiffCS():
 
 
 def conflictTextures():
+    sel = []
     confl = multFNdiffCS()
     for filecnf in confl:
         print "FILE:", filecnf
         for fileNode in confl[filecnf]:
+            sel.append(fileNode)
             print "\t", fileNode.name(), fileNode.colorSpace.get()
+    return sel
+
+
+def getFilesByCS(*colorspaces):
+    for fn in pym.ls(type="file"):
+        cs = fn.colorSpace.get()
+        if cs in colorspaces:
+            yield fn
+
+
+ACES_colorSpace = {
+    "srgb": u'Utility - sRGB - Texture',
+    "raw": u'Utility - Raw',
+    "p3-d60": u'Output - P3-D60'
+}

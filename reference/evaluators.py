@@ -28,29 +28,35 @@ def attrExists(attr):
 def findAttr(attr, lNS):
     attr, envelop = deenvelop(attr)
     found = False
-    if attrExists(attr):
+    curr = pym.namespaceInfo(cur=True)
+    if curr == ":":
+        curr = ""
+
+    if attrExists(attr) and (curr in attr):
         found = True
+        foundattr = attr
     else:
         for ns in lNS:
             attrLastHierachy = attr.split("|")[-1]
             attrStripNamespace = attrLastHierachy.split(":")[-1]
             searchWildCard = ns + "::" + attrStripNamespace
+
             lAttr = pym.ls(searchWildCard)
             if len(lAttr) == 1:
                 found = True
                 if type(lAttr[0]) == pym.Attribute:
-                    attr = lAttr[0].name(fullDagPath=True, fullAttrPath=True)
+                    foundattr = lAttr[0].name(fullDagPath=True, fullAttrPath=True)
                 elif type(lAttr[0]) == pym.general.Pivot:
-                    attr = lAttr[0].name()
+                    foundattr = lAttr[0].name()
                 else:
-                    attr = lAttr[0].name(long=True)
+                    foundattr = lAttr[0].name(long=True)
                 break
 
     if found:
-        oAttr = pym.PyNode(attr)
+        oAttr = pym.PyNode(foundattr)
         if any(envelop):
-            attr = reenvelop(attr, envelop)
-        return oAttr, attr
+            attr = reenvelop(foundattr, envelop)
+        return oAttr, foundattr
     else:
         return None, None
 

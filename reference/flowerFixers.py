@@ -5,17 +5,29 @@ import pymel.core as pym
 reload(ref)
 
 
-def fixLilli():
-    srcRN = "lilli_v70_namespaceRN"
-    tgtRN = "lilli_01RN"
+def fixLilli(
+    srcRN="lilli_v70_namespaceRN",
+    tgtRN="lilli_01RN",
+    irplist=None, skip=False, searchNS=None
+):
+    # ### sinistra
+    print "DEBUG: query tgt"
+    tgtNS = pym.referenceQuery(tgtRN, namespace=True)
+    print "DEBUG: queried tgt"
     json_file, json_file_left = (
         "lilli_eds", "lilli_eds_left"
     )
-    rplist = (
-        ("lilli:", "lilli_01:lilli:"),
+
+    rplist = irplist or (
+        ("lilli:", "{0}:lilli:".format(tgtNS)),
+        ("lilli4:", "{0}:lilli:".format(tgtNS)),
+        ("lilli1:", "{0}:lilli:".format(tgtNS))
     )
 
-    return fix(srcRN, tgtRN, json_file, json_file_left, rplist)
+    return fix(
+        srcRN, tgtRN, json_file, json_file_left, rplist, skip=skip,
+        searchNS=searchNS
+    )
 
 
 def sinistraToClon(s=1, c=1, n=1, skip=True):
@@ -66,10 +78,12 @@ def sinistraToClon(s=1, c=1, n=1, skip=True):
 
 def fixSinistra(
     srcRN="sinistra_v60_namespaceRN", tgtRN="sinistra_01RN",
-    irplist=None, skip=False
+    irplist=None, skip=False, searchNS=None
 ):
     # ### sinistra
+    print "DEBUG: query tgt"
     tgtNS = pym.referenceQuery(tgtRN, namespace=True)
+    print "DEBUG: queried tgt"
     json_file, json_file_left = (
         "sinistra_eds.json", "sinistra_eds_left.json"
     )
@@ -80,7 +94,10 @@ def fixSinistra(
         ("sinistra1:", "{0}:sinistra:".format(tgtNS))
     )
 
-    return fix(srcRN, tgtRN, json_file, json_file_left, rplist, skip=skip)
+    return fix(
+        srcRN, tgtRN, json_file, json_file_left, rplist, skip=skip,
+        searchNS=searchNS
+    )
 
 
 def fixGabyBird():
@@ -125,12 +142,17 @@ def fixHairbrush(
     return fix(srcRN, tgtRN, json_file, json_file_left, rplist)
 
 
-def fix(srcRN, tgtRN, json_file, json_file_left, rplist, skip=False):
+def fix(
+    srcRN, tgtRN, json_file,
+    json_file_left, rplist, skip=False,
+    searchNS=None
+):
     ref.exportEDS(srcRN, json_file)
     if not os.path.exists(json_file_left):
         ref.exportEDS(srcRN, json_file_left)
-
-    edleft = ref.importEDS(tgtRN, json_file_left, rplist, skip=skip)
+    edleft = ref.importEDS(
+        tgtRN, json_file_left, rplist, skip=skip, searchNS=searchNS
+    )
     if edleft:
         with open(json_file_left, "w") as fh:
             json.dump(edleft, fh, indent=4)

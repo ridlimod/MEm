@@ -24,11 +24,13 @@ def copyUVs(itersrc, nsdest):
 
 
 def copyMat(src, tgt):
-    shp = src.listRelatives(type="shape")[0]
-    SE = shp.listConnections(type="shadingEngine", et=True, d=True)[0]
-    tgtShape = tgt.listRelatives(shapes=True)[0]
-    if SE:
-        pym.sets(SE, e=True, forceElement=tgtShape)
+    shps = src.listRelatives(type="shape")
+    if shps:
+        shp = shps[0]
+        SE = shp.listConnections(type="shadingEngine", et=True, d=True)[0]
+        tgtShape = tgt.listRelatives(shapes=True)[0]
+        if SE:
+            pym.sets(SE, e=True, forceElement=tgtShape)
 
 
 def copyMats(itersrc, nsdest):
@@ -49,3 +51,137 @@ def copyMats(itersrc, nsdest):
             j += 1
     print "copied", i, "materials"
     print "not found", j, "objects"
+
+
+"""WIP COPIED FROM SESSION"""
+def fixOverrideMat():
+    lambertSE = pym.PyNode("initialShadingGroup")
+    for obj in pym.ls(sl=1):
+        shps = obj.listRelatives(shapes=True)
+        if shps:
+            shp = shps[0]
+            SEs = shp.listConnections(type="shadingEngine", et=True, d=True)
+            if SEs and len(SEs) == 1:
+                SE = SEs[0]
+                print "Cleaning", shp, "with", SE
+                pym.sets(lambertSE, e=True, forceElement=shp.faces)
+                pym.sets(SE, e=True, forceElement=shp.faces)
+
+
+"""WIP COPIED FROM SESSION"""
+def copyMatsToCache():
+    for obj in pym.ls(sl=1, dag=1, type="transform"):
+        shapes = obj.listRelatives(shapes=True)
+        if shapes:
+            shp = shapes[0]
+            if obj.isVisible() and shp.isVisible() and shp.type()=="mesh":
+                print obj.name(), obj.isVisible()
+                tgtname = obj.name(stripNamespace=True)
+                search = "|".join(map(lambda x: "caches:" + x, tgtname.split("|")))
+                print "SEARCHING for:", search
+                tgts = pym.ls(search)
+                if tgts:
+                    tgt = tgts[0]
+                    print "FOUND:", tgt.name()
+                    shd.copyMat(obj, tgt)
+
+
+"""WIP COPIED FROM SESSION"""
+def fixViewportShd():
+    for obj in pym.selected():
+        shps = obj.listRelatives(shapes=True)
+        if shps:
+            shp = shps[0]
+            SEs = shp.listConnections(type="shadingEngine", et=True, d=True)
+            if SEs and len(SEs) == 1:
+                SE = SEs[0]
+                sS = SE.surfaceShader.listConnections()
+                aiSS = SE.aiSurfaceShader.listConnections()
+                if not aiSS and sS:
+                    sS[0].outColor.connect(SE.aiSurfaceShader)
+                    nSS = pym.duplicate(sS[0])[0]
+                    nSS.outColor.connect(SE.surfaceShader, force=True)
+                    bColor, bBump = None, None
+                    for node in pym.listHistory(sS[0]):
+                        print node, node.type(), node.name()
+                        if (
+                            node.type() == "file"
+                            and "basecolor" in node.name().lower()
+                        ):
+                            bColor = node
+                        if node.type()=="bump2d":
+                            bBump = node
+                        if bColor and bBump:
+                            break
+                    if bColor:
+                        bColor.outColor.connect(nSS.baseColor)
+                    if bBump:
+                        bBump.outNormal.connect(nSS.normalCamera)
+                        files = bBump.listHistory(type="file")
+                        bI = bBump.bumpInterp.get()
+                        if any(
+                            map(
+                                lambda x: "normal" in x.name().lower(), files
+                            )
+                        ) and bI != 1:
+                            bBump.bumpInterp.set(1)
+                        elif any(
+                            map(
+                                lambda x: "bump" in x.name().lower(), files
+                            )
+                        ) and bI != 0:
+                            bBump.bumpInterp.set(0)
+                            # bBump.bumpDepth.set(1)
+
+
+def checkBumps(fix=False):
+    sel = []
+    for b2 in pym.ls(type="bump2d"):
+        files = b2.listHistory(type="file")
+        bI = b2.bumpInterp.get()
+        if files:
+            if any(
+                map(lambda x: "normal" in x.name().lower(), files)
+            ) and bI != 1:
+                print "Wrong normal:", b2
+                sel.append(b2)
+                if fix:
+                    b2.bumpInterp.set(1)
+
+            if any(
+                map(lambda x: "bump" in x.name().lower(), files)
+            ) and bI != 0:
+                print "Wrong bump:", b2
+                sel.append(b2)
+                if fix:
+                    b2.bumpInterp.set(0)
+    return sel
+
+
+def getMeshNode(obj):
+    obj = pym.PyNode(obj)
+    if obj.type() == "transform":
+        shps = obj.listRelatives(shapes=True)
+        print shps
+        if shps:
+            obj = shps[0]
+            print obj
+            return obj
+    if obj.type == "mesh":
+        return obj
+    return None
+
+
+def copyMMAT(src, tgt):
+    src = getMeshNode(src)
+    tgt = getMeshNode(tgt)
+    assert src and tgt, "select to mesh objects"
+    for sg in src.listSets(t=1):
+        for memb in sg.members():
+            if type(memb) == pym.general.MeshFace:
+                if memb.node() == src:
+                    indx = memb.indices()
+                    if indx:
+                        pym.sets(sg, forceElement=tgt.faces[indx])
+            elif type(memb) == pym.nodetypes.Mesh and memb == src:
+                pym.sets(sg, forceElement=tgt)

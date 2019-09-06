@@ -26,6 +26,8 @@ def removeEmptySets():
         ose.name(long=True) for ose in pym.ls(type="objectSet")
         if not ose.members()
         and ose.type() != "MASH_Waiter"
+        and ose.type() != "animLayer"
+        and len(ose.listConnections(type="materialOverride")) == 0
     ]
     for ose in oseIt:
         print "DEB: Try deleting:", ose

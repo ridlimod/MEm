@@ -76,8 +76,13 @@ def fixEditsSubstring(refnode, pfix, namespace):
 
 def fixEditsNS(rn, bad, new):
     bad_neds = []
+    curr = pym.namespaceInfo(cur=True)
+    if curr == ":":
+        curr = ""
+    else:
+        curr = curr + ":"
     for es in pym.system.referenceQuery(rn, es=True):
-        ns = es.replace(bad + ":", new + ":")
+        ns = es.replace(bad + ":", curr + new + ":")
         try:
             pym.mel.eval(ns)
         except Exception as e:
@@ -88,8 +93,10 @@ def fixEditsNS(rn, bad, new):
 
 def exportEDS(refnode, file):
     edlist = []
+    print "DEBUG: query src"
     for es in pym.system.referenceQuery(refnode, es=True):
         edlist.append(es.split(" "))
+    print "DEBUG: queried src"
     with open(file, "w") as fh:
         json.dump(edlist, fh, indent=4)
 
