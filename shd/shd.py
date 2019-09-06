@@ -87,51 +87,62 @@ def copyMatsToCache():
 
 
 """WIP COPIED FROM SESSION"""
+def connectColorAndBump(shd1, shd2):
+    bColor, bBump = None, None
+    for node in pym.listHistory(shd1):
+        if (
+            node.type() == "file"
+            and "basecolor" in node.name().lower()
+        ):
+            bColor = node
+        if node.type() == "bump2d":
+            bBump = node
+        if bColor and bBump:
+            break
+    if bColor:
+        bColor.outColor.connect(shd2.baseColor)
+    if bBump:
+        bBump.outNormal.connect(shd2.normalCamera)
+
+
 def fixViewportShd():
     for obj in pym.selected():
         shps = obj.listRelatives(shapes=True)
         if shps:
             shp = shps[0]
-            SEs = shp.listConnections(type="shadingEngine", et=True, d=True)
-            if SEs and len(SEs) == 1:
-                SE = SEs[0]
-                sS = SE.surfaceShader.listConnections()
-                aiSS = SE.aiSurfaceShader.listConnections()
-                if not aiSS and sS:
-                    sS[0].outColor.connect(SE.aiSurfaceShader)
-                    nSS = pym.duplicate(sS[0])[0]
-                    nSS.outColor.connect(SE.surfaceShader, force=True)
-                    bColor, bBump = None, None
-                    for node in pym.listHistory(sS[0]):
-                        print node, node.type(), node.name()
-                        if (
-                            node.type() == "file"
-                            and "basecolor" in node.name().lower()
-                        ):
-                            bColor = node
-                        if node.type()=="bump2d":
-                            bBump = node
-                        if bColor and bBump:
-                            break
-                    if bColor:
-                        bColor.outColor.connect(nSS.baseColor)
-                    if bBump:
-                        bBump.outNormal.connect(nSS.normalCamera)
-                        files = bBump.listHistory(type="file")
-                        bI = bBump.bumpInterp.get()
-                        if any(
-                            map(
-                                lambda x: "normal" in x.name().lower(), files
-                            )
-                        ) and bI != 1:
-                            bBump.bumpInterp.set(1)
-                        elif any(
-                            map(
-                                lambda x: "bump" in x.name().lower(), files
-                            )
-                        ) and bI != 0:
-                            bBump.bumpInterp.set(0)
-                            # bBump.bumpDepth.set(1)
+            for se in shp.listSets(t=1):
+                sS = se.surfaceShader.listConnections()
+                aiSS = se.aiSurfaceShader.listConnections()
+                if sS:
+                    sS = sS[0]
+                    baseColorN = sS.baseColor.listConnections()
+                    if baseColorN:
+                        baseColorN = baseColorN[0]
+                        if not baseColorN.type() == "file":
+                            print "Correct!"
+                            sS.outColor.connect(se.aiSurfaceShader)
+                            nSS = pym.duplicate(sS)[0]
+                            nSS.rename(sS.name()[:-3] + "PRV")
+                            nSS.outColor.connect(se.surfaceShader, force=True)
+                            connectColorAndBump(sS, nSS)
+
+
+""" Not used now, force bump type from filename
+files = bBump.listHistory(type="file")
+bI = bBump.bumpInterp.get()
+if any(
+    map(
+        lambda x: "normal" in x.name().lower(), files
+    )
+) and bI != 1:
+    bBump.bumpInterp.set(1)
+elif any(
+    map(
+        lambda x: "bump" in x.name().lower(), files
+    )
+) and bI != 0:
+    bBump.bumpInterp.set(0)
+"""                                # bBump.bumpDepth.set(1)
 
 
 def checkBumps(fix=False):
