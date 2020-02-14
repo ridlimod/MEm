@@ -69,6 +69,34 @@ def fixOverrideMat():
 
 
 """WIP COPIED FROM SESSION"""
+def fixOverrideMMat(obj):
+    lambertSE = pym.PyNode("initialShadingGroup")
+    srcMats = {}
+    shape = getMeshNode(obj)
+    assert shape, "Not mesh in {0}".format(obj.name())
+    for se in shape.listSets(t=1):
+        srcMats[se] = {"face": [], "mesh": False}
+        seData = srcMats[se]
+        for memb in se.members():
+            if type(memb) == pym.general.MeshFace:
+                if memb.node() == shape:
+                    seData["face"].append(memb.indices())
+            elif type(memb) == pym.nodetypes.Mesh and memb == shape:
+                seData["mesh"] = True
+
+    pym.sets(lambertSE, e=True, forceElement=shape.faces)
+    pym.sets(lambertSE, e=True, forceElement=shape)
+    for se in srcMats:
+        data = srcMats[se]
+        if data["mesh"]:
+            pym.sets(se, e=True, forceElement=shape)
+        for faces in data["face"]:
+            pym.sets(se, e=True, forceElement=shape.faces[faces])
+
+    return srcMats
+
+
+"""WIP COPIED FROM SESSION"""
 def copyMatsToCache():
     for obj in pym.ls(sl=1, dag=1, type="transform"):
         shapes = obj.listRelatives(shapes=True)
@@ -183,7 +211,7 @@ def getMeshNode(obj):
     return None
 
 
-def copyMMAT(src, tgt):
+def shareMMAT(src, tgt):
     src = getMeshNode(src)
     tgt = getMeshNode(tgt)
     assert src and tgt, "select to mesh objects"
@@ -196,3 +224,80 @@ def copyMMAT(src, tgt):
                         pym.sets(sg, forceElement=tgt.faces[indx])
             elif type(memb) == pym.nodetypes.Mesh and memb == src:
                 pym.sets(sg, forceElement=tgt)
+
+
+def copyMMAT(src, tgt):
+    src = getMeshNode(src)
+    tgt = getMeshNode(tgt)
+    assert src and tgt, "select to mesh objects"
+    for sg in src.listSets(t=1):
+        print "Preparing to duplicate:", sg.name(stripNamespace=True), sg.name()
+        if sg.name(stripNamespace=True) != "initialShadingGroup":
+            newname = "COPY_" + sg.name(stripNamespace=True)
+            try:
+                matinscene = pym.PyNode(newname)
+            except Exception as e:
+                matinscene = None
+            if matinscene:
+                newSG = matinscene
+            else:
+                newSG = pym.duplicate(
+                    sg, n=newname,
+                    rr=True, un=True, renameChildren=True
+                )[0]
+
+            for memb in sg.members():
+                if type(memb) == pym.general.MeshFace:
+                    if memb.node() == src:
+                        indx = memb.indices()
+                        if indx:
+                            pym.sets(newSG, forceElement=tgt.faces[indx])
+                elif type(memb) == pym.nodetypes.Mesh and memb == src:
+                    pym.sets(newSG, forceElement=tgt)
+
+
+def copyArnoldProp(src, tgt):
+    src = getMeshNode(src)
+    tgt = getMeshNode(tgt)
+    assert src and tgt, "select to mesh objects"
+    aiOpaque = src.aiOpaque.get()
+    aiMatte = src.aiMatte.get()
+    primaryVisibility = src.primaryVisibility.get()
+    castShadows = src.castsShadows.get()
+    aiVisibleInDiffuseReflection = src.aiVisibleInDiffuseReflection.get()
+    aiVisibleInSpecularReflection = src.aiVisibleInSpecularReflection.get()
+    aiVisibleInDiffuseTransmission = src.aiVisibleInDiffuseTransmission.get()
+    aiVisibleInSpecularTransmission = src.aiVisibleInSpecularTransmission.get()
+    aiVisibleInVolume = src.aiVisibleInVolume.get()
+    aiSelfShadows = src.aiSelfShadows.get()
+    tgt.aiOpaque.set(aiOpaque)
+    tgt.aiMatte.set(aiMatte)
+    tgt.primaryVisibility.set(primaryVisibility)
+    tgt.castsShadows.set(castShadows)
+    tgt.aiVisibleInDiffuseTransmission.set(aiVisibleInDiffuseReflection)
+    tgt.aiVisibleInSpecularReflection.set(aiVisibleInSpecularReflection)
+    tgt.aiVisibleInDiffuseTransmission.set(aiVisibleInDiffuseTransmission)
+    tgt.aiVisibleInSpecularTransmission.set(aiVisibleInSpecularTransmission)
+    tgt.aiVisibleInVolume.set(aiVisibleInVolume)
+    tgt.aiSelfShadows.set(aiSelfShadows)
+
+
+def cleanMats(obj):
+    shp = getMeshNode(obj)
+    # for sset in shp.listSets(t=1):
+    #     for memb in sset.members():
+    #         if type(memb) == pym.general.MeshFace:
+    #             if memb.node() == shp:
+    #                 print "remove SUB"
+    #                 sset.remove(memb)
+    #         if type(memb) == pym.nodetypes.Mesh and memb == shp:
+    #             print "remove OBJ"
+    #             sset.remove(memb)
+    for connection in shp.listConnections(
+        type="shadingEngine", c=True, p=True
+    ):
+        connection[0].disconnect()
+    for connection in obj.listConnections(
+        type="shadingEngine", c=True, p=True
+    ):
+        connection[0].disconnect()
