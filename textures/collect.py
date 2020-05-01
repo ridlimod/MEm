@@ -59,6 +59,14 @@ def getFilesByCS(*colorspaces):
             yield fn
 
 
+def getFilesWithUnusualCS():
+    for fn in pym.ls(type="file"):
+        cs = fn.colorSpace.get()
+        print fn, cs
+        if not any(map(lambda x: cs == ACES_colorSpace[x], ACES_colorSpace)):
+            yield fn
+
+
 ACES_colorSpace = {
     "srgb": u'Utility - sRGB - Texture',
     "raw": u'Utility - Raw',

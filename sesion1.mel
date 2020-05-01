@@ -1,0 +1,59 @@
+select -r BODY ;
+icTransferSkinCluster 0 0;
+// Skin weights directory is set to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/' //
+// transferSkinCluster command took 0.10 seconds //
+// Weights exported to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/skinCluster41.scw' //
+select -r LEG_L ;
+icTransferSkinCluster 0 0;
+// Skin weights directory is set to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/' //
+// transferSkinCluster command took 0.01 seconds //
+// Weights exported to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/skinCluster39.scw' //
+select -r LEG_R ;
+icTransferSkinCluster 0 0;
+// Skin weights directory is set to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/' //
+// transferSkinCluster command took 0.02 seconds //
+// Weights exported to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/skinCluster40.scw' //
+select -r TONGUE ;
+icTransferSkinCluster 0 0;
+// Skin weights directory is set to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/' //
+// transferSkinCluster command took 0.02 seconds //
+// Weights exported to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/skinCluster48.scw' //
+select -r EYELID_DOWN_L ;
+icTransferSkinCluster 0 0;
+// Skin weights directory is set to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/' //
+// transferSkinCluster command took 0.00 seconds //
+// Weights exported to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/skinCluster47.scw' //
+select -r EYELASH_R ;
+icTransferSkinCluster 0 0;
+// Skin weights directory is set to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/' //
+// transferSkinCluster command took 0.00 seconds //
+// Weights exported to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/skinCluster46.scw' //
+select -r iBird28_EYE_L ;
+// Warning: Texture file D:/32_genoma/01_chars/generic_eye//_maps/genericBird_eye_bum.tif doesn't exist, node _genericBird_eye_bump_TX1 //
+// Warning: Texture file D:/32_genoma/01_chars/generic_eye//_maps/genericBird_eye_basecolor.tif doesn't exist, node _genericBird_eye_basecolor_TX1 //
+// Warning: Texture file D:/32_genoma/01_chars/generic_eye//_maps/genericBird_eye_bum.tif doesn't exist, node _genericBird_eye_bump_TX1 //
+// Warning: Texture file D:/32_genoma/01_chars/generic_eye//_maps/genericBird_eye_basecolor.tif doesn't exist, node _genericBird_eye_basecolor_TX1 //
+// Warning: Texture file D:/32_genoma/01_chars/generic_eye//_maps/genericBird_eye_bum.tif doesn't exist, node _genericBird_eye_bump_TX1 //
+// Warning: Texture file D:/32_genoma/01_chars/generic_eye//_maps/genericBird_eye_basecolor.tif doesn't exist, node _genericBird_eye_basecolor_TX1 //
+// Warning: Texture file D:/32_genoma/01_chars/generic_eye//_maps/genericBird_eye_bum.tif doesn't exist, node _genericBird_eye_bump_TX1 //
+// Warning: Texture file D:/32_genoma/01_chars/generic_eye//_maps/genericBird_eye_basecolor.tif doesn't exist, node _genericBird_eye_basecolor_TX1 //
+select -r EYELID_R ;
+icTransferSkinCluster 0 0;
+// Skin weights directory is set to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/' //
+// transferSkinCluster command took 0.02 seconds //
+// Weights exported to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/skinCluster42.scw' //
+select -r EYELID_L ;
+icTransferSkinCluster 0 0;
+// Skin weights directory is set to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/' //
+// transferSkinCluster command took 0.02 seconds //
+// Weights exported to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/skinCluster43.scw' //
+select -r EYELID_DOWN_R ;
+icTransferSkinCluster 0 0;
+// Skin weights directory is set to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/' //
+// transferSkinCluster command took 0.02 seconds //
+// Weights exported to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/skinCluster44.scw' //
+select -r EYELASH_L ;
+icTransferSkinCluster 0 0;
+// Skin weights directory is set to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/' //
+// transferSkinCluster command took 0.01 seconds //
+// Weights exported to 'E:/FreeLanceWork/Genoma/PRJ_FLOWER/data/skinWeights/skinCluster45.scw' //

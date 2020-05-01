@@ -77,6 +77,12 @@ class Sync(object):
         path = self.__strip__(pym.util.path(path))
         return (self.__src__ / path).exists()
 
+    def remote_path(self, path):
+        return self.__src__ / path
+
+    def local_path(self, path):
+        return self.__prj__ / path
+
     def __strip__(self, path):
         parts = path.splitall()
         i = 0
@@ -120,35 +126,63 @@ def syncReferences():
             FR.replaceWith(reffile)
 
 
+def getLatestReferences():
+    oSync = Sync()
+    for FR in pym.system.iterReferences():
+        print "searching for", FR.path
+        loc = oSync.getLatest(FR.path, local=True)
+        src = oSync.getLatest(FR.path)
+        print "Local, Latest:", loc, src
+
+
+def syncPath(mapfolder):
+    print "sync Folder", mapfolder
+    oSync = Sync()
+    remfiles = set()
+    for fil in oSync.remote_path(mapfolder).files():
+        if oSync.remote_exists(fil):
+            if not oSync.local_exists(fil):
+                print "Copying", fil
+                oSync.copyRef(fil)
+            remfiles.add(oSync.strip(fil))
+    return remfiles
+
+
 def syncTextures(error=False):
     oSync = Sync()
+    paths = set()
     for fn in pym.ls(type="file"):
-        ftn = fn.fileTextureName.get()
-        try:
-            exists = oSync.local_exists(ftn)
-        except Exception as e:
-            if error:
-                print "Raise:", e
-                raise e
-            else:
-                print "Error:", e
-                print "Skip"
-                continue
-
-        if not exists:
-            print "Copying...", ftn
-            try:
-                sftn = oSync.copyRef(ftn)
-            except Exception as e:
-                if error:
-                    print "Raise:", e
-                    raise e
-                else:
-                    print "Error:", e
-                    print "Skip"
-                    continue
-
-            fn.fileTextureName.set(sftn)
+        if pym.hasAttr(fn, "fileTextureName"):
+            ftn = fn.fileTextureName.get()
+            mapfolder = oSync.strip(pym.Path(ftn).parent)
+            if mapfolder not in paths:
+                paths.add(mapfolder)
+                syncPath(mapfolder)
+            # try:
+            #     exists = oSync.local_exists(ftn)
+            # except Exception as e:
+            #     if error:
+            #         print "Raise:", e
+            #         raise e
+            #     else:
+            #         print "Error:", e
+            #         print "Skip"
+            #         continue
+            #
+            # if not exists:
+            #     print "Copying...", ftn
+            #     try:
+            #         sftn = oSync.copyRef(ftn)
+            #     except Exception as e:
+            #         if error:
+            #             print "Raise:", e
+            #             raise e
+            #         else:
+            #             print "Error:", e
+            #             print "Skip"
+            #             continue
+            #
+            #     fn.fileTextureName.set(sftn)
 
 
 def syncAudios():
@@ -167,6 +201,12 @@ def syncAll():
     syncAudios()
 
 
+def setTexturePathWithSameCS(node, filepath):
+    cs = node.colorSpace.get()
+    node.fileTextureName.set(filepath)
+    node.colorSpace.set(cs)
+
+
 def allTexturesToRelative():
     oSync = Sync()
     prjpath = pym.workspace.path
@@ -176,14 +216,14 @@ def allTexturesToRelative():
             path = pym.Path(filenode.fileTextureName.get())
             if not path.startswith(prjpath):
                 if oSync.local_exists(path):
-                    filenode.fileTextureName.set(oSync.strip(path))
+                    setTexturePathWithSameCS(filenode, oSync.strip(path))
                 elif oSync.remote_exists(path):
                     path = oSync.copyRef(path)
-                    filenode.fileTextureName.set(oSync.strip(path))
+                    setTexturePathWithSameCS(filenode, oSync.strip(path))
                 else:
                     newpath = oSync.getLatest(path)
                     if newpath:
-                        filenode.fileTextureName.set(oSync.strip(newpath))
+                        setTexturePathWithSameCS(filenode, oSync.strip(path))
                     else:
                         notfound.append(filenode, path)
     return notfound

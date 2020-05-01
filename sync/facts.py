@@ -1,6 +1,6 @@
 facts = {
     "src": "G:/Mi unidad",
-    "tgt": "E:/FreeLanceWork/Genoma/PRJ_FLOWER",
+    "tgt": "Z:/FLOWER",
     "CH_ASSETS_FOLDER": "210_ASSETS_CH",
     "CH_FOLDER_RE": r"CH_(?P<name>[a-zA-Z][a-zA-Z0-9]+)",
     "CH_FILE_RE": (
